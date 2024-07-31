@@ -47,22 +47,29 @@ def fetch_weather_data(station_id, start_date, end_date):
         logger.info(f"End date adjusted to today: {end.strftime('%Y-%m-%d')}")
 
     # Fetch station metadata to check date range
-    station_metadata = fetch_station_metadata(station_id)
+    try:
+        station_metadata = fetch_station_metadata(station_id)
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error fetching station metadata: {str(e)}")
+        raise ValueError(f"Unable to fetch metadata for station {station_id}")
+
     station_start = datetime.strptime(station_metadata['mindate'], '%Y-%m-%d')
     station_end = datetime.strptime(station_metadata['maxdate'], '%Y-%m-%d')
 
     # Adjust date range to station's available data
+    original_start, original_end = start, end
     if start < station_start:
         start = station_start
-        logger.info(f"Start date adjusted to station's earliest date: {start.strftime('%Y-%m-%d')}")
     if end > station_end:
         end = station_end
-        logger.info(f"End date adjusted to station's latest date: {end.strftime('%Y-%m-%d')}")
 
     # Ensure the date range is not more than 1 year
     if (end - start).days > 365:
         end = start + timedelta(days=365)
-        logger.info(f"Date range adjusted to 1 year: {start.strftime('%Y-%m-%d')} to {end.strftime('%Y-%m-%d')}")
+
+    # Check if we have a valid date range after adjustments
+    if start >= end:
+        raise ValueError("No data available for the selected date range after adjustments")
 
     params = {
         "datasetid": "GHCND",
@@ -82,9 +89,17 @@ def fetch_weather_data(station_id, start_date, end_date):
     response.raise_for_status()
     data = response.json()
     
-    logger.info(f"Received {len(data.get('results', []))} records from NOAA API")
+    results = data.get('results', [])
+    logger.info(f"Received {len(results)} records from NOAA API")
     
-    return data.get('results', [])
+    adjusted_range = {
+        "start": start.strftime('%Y-%m-%d'),
+        "end": end.strftime('%Y-%m-%d'),
+        "original_start": original_start.strftime('%Y-%m-%d'),
+        "original_end": original_end.strftime('%Y-%m-%d')
+    }
+    
+    return results, adjusted_range
 
 def fetch_station_metadata(station_id):
     headers = {"token": NOAA_API_TOKEN}
