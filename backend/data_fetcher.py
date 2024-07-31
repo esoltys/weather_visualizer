@@ -11,6 +11,18 @@ load_dotenv()
 NOAA_API_BASE_URL = "https://www.ncdc.noaa.gov/cdo-web/api/v2/"
 NOAA_API_TOKEN = os.getenv("NOAA_API_TOKEN")
 
+def fetch_weather_stations(limit=1000, offset=1):
+    headers = {"token": NOAA_API_TOKEN}
+    params = {
+        "datasetid": "GHCND",
+        "limit": limit,
+        "offset": offset
+    }
+    
+    response = requests.get(f"{NOAA_API_BASE_URL}stations", headers=headers, params=params)
+    response.raise_for_status()
+    return response.json()
+
 def fetch_weather_data(station_id, start_date, end_date):
     headers = {"token": NOAA_API_TOKEN}
     params = {

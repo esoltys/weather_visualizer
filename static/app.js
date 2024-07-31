@@ -1,8 +1,10 @@
 require([
     "esri/Map",
     "esri/views/MapView",
-    "esri/widgets/Search"
-], function(Map, MapView, Search) {
+    "esri/widgets/Search",
+    "esri/Graphic",
+    "esri/layers/GraphicsLayer"
+], function(Map, MapView, Search, Graphic, GraphicsLayer) {
     const map = new Map({
         basemap: "topo-vector"
     });
@@ -20,7 +22,54 @@ require([
 
     view.ui.add(search, "top-right");
 
+    const stationsLayer = new GraphicsLayer();
+    map.add(stationsLayer);
+
     let selectedStation = null;
+
+    function addStationsToMap(stations) {
+        stations.forEach(station => {
+            const point = {
+                type: "point",
+                longitude: station.longitude,
+                latitude: station.latitude
+            };
+
+            const markerSymbol = {
+                type: "simple-marker",
+                color: [226, 119, 40],
+                outline: {
+                    color: [255, 255, 255],
+                    width: 1
+                }
+            };
+
+            const pointGraphic = new Graphic({
+                geometry: point,
+                symbol: markerSymbol,
+                attributes: station
+            });
+
+            stationsLayer.add(pointGraphic);
+        });
+    }
+
+    fetch('/api/stations')
+        .then(response => response.json())
+        .then(data => {
+            addStationsToMap(data.results);
+        })
+        .catch(error => console.error('Error:', error));
+
+    view.on("click", function(event) {
+        view.hitTest(event).then(function(response) {
+            const result = response.results[0];
+            if (result && result.graphic) {
+                selectedStation = result.graphic.attributes.id;
+                console.log("Selected station:", selectedStation);
+            }
+        });
+    });
 
     view.on("click", function(event) {
         view.hitTest(event).then(function(response) {
