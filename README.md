@@ -6,11 +6,15 @@ This project is a web application that visualizes historical weather patterns us
 
 ## Features
 
-- Interactive map for selecting weather stations
-- Date range selection for historical weather data
-- Visualization of average temperature trends using Chart.js
-- Backend API built with FastAPI
-- Frontend using ArcGIS JavaScript API for mapping
+- Interactive map interface for selecting weather stations
+- Detailed station information display with available date ranges
+- Custom date range selection for data retrieval
+- Temperature trend visualization using line charts
+- Zoom functionality for detailed data exploration
+- Automatic date range adjustment based on data availability
+- Clear error messaging and data availability alerts
+- Backend API for efficient data retrieval from NOAA Climate Data Online (CDO)
+- Responsive design for various device sizes
 
 ## Prerequisites
 
