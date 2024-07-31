@@ -138,9 +138,36 @@ require([
                 if (!Array.isArray(data.results) || data.results.length === 0) {
                     throw new Error('No data available for the selected station and date range');
                 }
-                // Process and visualize the data using Chart.js
-                const dates = data.results.map(d => d.date);
-                const temps = data.results.map(d => d.temperature);
+                
+                // Group data by date and data type
+                const groupedData = data.results.reduce((acc, item) => {
+                    if (!acc[item.date]) {
+                        acc[item.date] = {};
+                    }
+                    acc[item.date][item.datatype] = item.value;
+                    return acc;
+                }, {});
+
+                // Convert grouped data to array and calculate average temperature
+                const processedData = Object.entries(groupedData).map(([date, values]) => {
+                    let temp = null;
+                    if ('TAVG' in values) {
+                        temp = values['TAVG'];
+                    } else if ('TMAX' in values && 'TMIN' in values) {
+                        temp = (parseFloat(values['TMAX']) + parseFloat(values['TMIN'])) / 2;
+                    }
+                    return { date, temperature: temp };
+                }).filter(item => item.temperature !== null);
+
+                if (processedData.length === 0) {
+                    throw new Error('No temperature data available for the selected date range');
+                }
+
+                // Sort by date
+                processedData.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                const dates = processedData.map(d => d.date);
+                const temps = processedData.map(d => d.temperature);
 
                 if (chart) {
                     chart.destroy();
@@ -181,6 +208,10 @@ require([
             .catch(error => {
                 console.error('Error:', error);
                 document.getElementById("weatherChart").innerHTML = `Error: ${error.message}`;
+                // Display a more user-friendly message for date range errors
+                if (error.message.includes("Cannot query future dates") || error.message.includes("outside the station's data range")) {
+                    alert(error.message + "\n\nPlease select a different date range.");
+                }
             });
     });
 });

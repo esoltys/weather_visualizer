@@ -2,7 +2,6 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from data_fetcher import get_weather_data, fetch_weather_stations
-import os
 import logging
 
 # Set up logging
@@ -34,9 +33,6 @@ async def get_weather(station_id: str, start_date: str, end_date: str):
         data = get_weather_data(station_id, start_date, end_date)
         logger.info(f"Fetched {len(data)} weather records")
         return {"results": data}
-    except ValueError as e:
-        logger.error(f"Value error: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Error fetching weather data: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
