@@ -2,6 +2,8 @@
 
 This project is a web application that visualizes historical weather patterns using data from the NOAA Climate Data Online (CDO) API. It allows users to select weather stations on a map, choose a date range, and view temperature trends over time.
 
+![Screenshot](screenshot.png)
+
 ## Features
 
 - Interactive map for selecting weather stations
@@ -22,7 +24,7 @@ Before you begin, ensure you have met the following requirements:
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/weather-patterns-visualizer.git
+   git clone https://github.com/esoltys/weather-patterns-visualizer.git
    cd weather-patterns-visualizer
    ```
 
