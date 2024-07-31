@@ -36,29 +36,22 @@ def fetch_weather_data(station_id, start_date, end_date):
     
     response = requests.get(f"{NOAA_API_BASE_URL}data", headers=headers, params=params)
     response.raise_for_status()
-    return response.json()
-
-def process_weather_data(raw_data):
-    df = pd.DataFrame(raw_data['results'])
-    df['date'] = pd.to_datetime(df['date'])
-    df = df.pivot(index='date', columns='datatype', values='value')
-    return df
-
-def get_station_info(station_id):
-    headers = {"token": NOAA_API_TOKEN}
-    response = requests.get(f"{NOAA_API_BASE_URL}stations/{station_id}", headers=headers)
-    response.raise_for_status()
-    return response.json()
-
-def create_geospatial_df(df, station_info):
-    gis = GIS()
-    df['longitude'] = station_info['longitude']
-    df['latitude'] = station_info['latitude']
-    return GeoAccessor.from_df(df, sr=4326)
+    data = response.json()
+    
+    # Process the data into a more usable format
+    processed_data = []
+    for item in data.get('results', []):
+        date = item['date']
+        datatype = item['datatype']
+        value = item['value']
+        
+        existing_entry = next((entry for entry in processed_data if entry['date'] == date), None)
+        if existing_entry:
+            existing_entry[datatype] = value
+        else:
+            processed_data.append({'date': date, datatype: value})
+    
+    return processed_data
 
 def get_weather_data(station_id, start_date, end_date):
-    raw_data = fetch_weather_data(station_id, start_date, end_date)
-    processed_data = process_weather_data(raw_data)
-    station_info = get_station_info(station_id)
-    geospatial_df = create_geospatial_df(processed_data, station_info)
-    return geospatial_df
+    return fetch_weather_data(station_id, start_date, end_date)

@@ -19,16 +19,15 @@ async def get_stations():
         stations = fetch_weather_stations()
         return stations
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/weather/{station_id}")
 async def get_weather(station_id: str, start_date: str, end_date: str):
     try:
         data = get_weather_data(station_id, start_date, end_date)
-        return data.to_dict(orient="records")
+        return {"results": data}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn

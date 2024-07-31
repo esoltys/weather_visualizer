@@ -122,11 +122,19 @@ require([
         const endDate = document.getElementById("endDate").value;
 
         fetch(`/api/weather/${selectedStation}?start_date=${startDate}&end_date=${endDate}`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                if (!data.results || !Array.isArray(data.results)) {
+                    throw new Error('Unexpected data format received from server');
+                }
                 // Process and visualize the data using Chart.js
-                const dates = data.map(d => d.date);
-                const temps = data.map(d => d.TAVG);
+                const dates = data.results.map(d => d.date);
+                const temps = data.results.map(d => d.TAVG || d.TMAX || d.TMIN || null);
 
                 if (chart) {
                     chart.destroy();
@@ -138,7 +146,7 @@ require([
                     data: {
                         labels: dates,
                         datasets: [{
-                            label: 'Average Temperature',
+                            label: 'Temperature',
                             data: temps,
                             borderColor: 'rgb(75, 192, 192)',
                             tension: 0.1
@@ -148,12 +156,25 @@ require([
                         responsive: true,
                         scales: {
                             y: {
-                                beginAtZero: false
+                                beginAtZero: false,
+                                title: {
+                                    display: true,
+                                    text: 'Temperature (°C)'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Date'
+                                }
                             }
                         }
                     }
                 });
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error:', error);
+                alert(`An error occurred: ${error.message}`);
+            });
     });
 });
