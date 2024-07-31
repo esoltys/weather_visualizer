@@ -69,7 +69,7 @@ def fetch_weather_data(station_id, start_date, end_date):
 
     # Check if we have a valid date range after adjustments
     if start >= end:
-        raise ValueError("No data available for the selected date range after adjustments")
+        raise ValueError(f"No data available for the selected date range. Station data available from {station_start.strftime('%Y-%m-%d')} to {station_end.strftime('%Y-%m-%d')}.")
 
     params = {
         "datasetid": "GHCND",
@@ -91,6 +91,9 @@ def fetch_weather_data(station_id, start_date, end_date):
     
     results = data.get('results', [])
     logger.info(f"Received {len(results)} records from NOAA API")
+    
+    if len(results) == 0:
+        raise ValueError(f"No data available for the selected date range. Station data available from {station_start.strftime('%Y-%m-%d')} to {station_end.strftime('%Y-%m-%d')}.")
     
     adjusted_range = {
         "start": start.strftime('%Y-%m-%d'),

@@ -121,7 +121,11 @@ require([
         const startDate = document.getElementById("startDate").value;
         const endDate = document.getElementById("endDate").value;
 
-        // Show loading message
+        // Clear previous chart and show loading message
+        if (chart) {
+            chart.destroy();
+            chart = null;
+        }
         document.getElementById("weatherChart").innerHTML = "Loading data...";
 
         fetch(`/api/weather/${selectedStation}?start_date=${startDate}&end_date=${endDate}`)
@@ -141,16 +145,15 @@ require([
                 
                 // Check if the date range was adjusted
                 if (data.adjusted_range) {
-                    alert(`Date range adjusted due to data availability or API limitations:\nNew range: ${data.adjusted_range.start} to ${data.adjusted_range.end}`);
+                    const { start, end, original_start, original_end } = data.adjusted_range;
+                    if (start !== original_start || end !== original_end) {
+                        alert(`Date range adjusted due to data availability:\nOriginal range: ${original_start} to ${original_end}\nAdjusted range: ${start} to ${end}`);
+                    }
                 }
 
                 // Process and visualize the data using Chart.js
-                const dates = data.results.map(d => d.date);
+                const dates = data.results.map(d => d.date.split('T')[0]);  // Extract date part
                 const temps = data.results.map(d => d.value);
-
-                if (chart) {
-                    chart.destroy();
-                }
 
                 const ctx = document.getElementById("weatherChart").getContext('2d');
                 chart = new Chart(ctx, {
@@ -187,6 +190,7 @@ require([
             .catch(error => {
                 console.error('Error:', error);
                 document.getElementById("weatherChart").innerHTML = `Error: ${error.message}`;
+                alert(`Error: ${error.message}`);
             });
     });
 });
