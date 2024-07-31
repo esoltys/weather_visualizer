@@ -127,8 +127,8 @@ require([
         fetch(`/api/weather/${selectedStation}?start_date=${startDate}&end_date=${endDate}`)
             .then(response => {
                 if (!response.ok) {
-                    return response.text().then(text => {
-                        throw new Error(`HTTP error! status: ${response.status}, message: ${text}`);
+                    return response.json().then(err => {
+                        throw new Error(err.detail || `HTTP error! status: ${response.status}`);
                     });
                 }
                 return response.json();
