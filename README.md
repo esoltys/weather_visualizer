@@ -39,8 +39,10 @@ Before you begin, ensure you have met the following requirements:
 
 4. Set up your NOAA API key:
    - Request a key from https://www.ncdc.noaa.gov/cdo-web/token
-   - Open `backend/data_fetcher.py`
-   - Replace `"YOUR_NOAA_API_TOKEN_HERE"` with your actual NOAA CDO API key
+   - Add your NOAA CDO API key to the `.env` file:
+     ```
+     NOAA_API_TOKEN=your_actual_api_token_here
+     ```
 
 ## Usage
 

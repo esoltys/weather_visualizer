@@ -2,9 +2,14 @@ import requests
 from arcgis.gis import GIS
 from arcgis.features import GeoAccessor
 import pandas as pd
+from dotenv import load_dotenv
+import os
+
+# Load environment variables
+load_dotenv()
 
 NOAA_API_BASE_URL = "https://www.ncdc.noaa.gov/cdo-web/api/v2/"
-NOAA_API_TOKEN = "YOUR_NOAA_API_TOKEN_HERE"  # Replace with your actual token
+NOAA_API_TOKEN = os.getenv("NOAA_API_TOKEN")
 
 def fetch_weather_data(station_id, start_date, end_date):
     headers = {"token": NOAA_API_TOKEN}
