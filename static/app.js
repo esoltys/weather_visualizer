@@ -121,20 +121,26 @@ require([
         const startDate = document.getElementById("startDate").value;
         const endDate = document.getElementById("endDate").value;
 
+        // Show loading message
+        document.getElementById("weatherChart").innerHTML = "Loading data...";
+
         fetch(`/api/weather/${selectedStation}?start_date=${startDate}&end_date=${endDate}`)
             .then(response => {
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    return response.text().then(text => {
+                        throw new Error(`HTTP error! status: ${response.status}, message: ${text}`);
+                    });
                 }
                 return response.json();
             })
             .then(data => {
-                if (!data.results || !Array.isArray(data.results)) {
-                    throw new Error('Unexpected data format received from server');
+                console.log("Received data:", data);  // Log the received data
+                if (!Array.isArray(data.results) || data.results.length === 0) {
+                    throw new Error('No data available for the selected station and date range');
                 }
                 // Process and visualize the data using Chart.js
                 const dates = data.results.map(d => d.date);
-                const temps = data.results.map(d => d.TAVG || d.TMAX || d.TMIN || null);
+                const temps = data.results.map(d => d.temperature);
 
                 if (chart) {
                     chart.destroy();
@@ -174,7 +180,7 @@ require([
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert(`An error occurred: ${error.message}`);
+                document.getElementById("weatherChart").innerHTML = `Error: ${error.message}`;
             });
     });
 });

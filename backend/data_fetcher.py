@@ -1,9 +1,12 @@
 import requests
-from arcgis.gis import GIS
-from arcgis.features import GeoAccessor
-import pandas as pd
 from dotenv import load_dotenv
 import os
+from datetime import datetime
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
@@ -34,24 +37,49 @@ def fetch_weather_data(station_id, start_date, end_date):
         "units": "metric"
     }
     
+    logger.info(f"Fetching data from NOAA API for station {station_id}")
     response = requests.get(f"{NOAA_API_BASE_URL}data", headers=headers, params=params)
     response.raise_for_status()
     data = response.json()
     
+    logger.info(f"Received {len(data.get('results', []))} records from NOAA API")
+    
     # Process the data into a more usable format
-    processed_data = []
+    processed_data = {}
     for item in data.get('results', []):
-        date = item['date']
+        date = item['date'][:10]  # Extract just the date part
         datatype = item['datatype']
         value = item['value']
         
-        existing_entry = next((entry for entry in processed_data if entry['date'] == date), None)
-        if existing_entry:
-            existing_entry[datatype] = value
-        else:
-            processed_data.append({'date': date, datatype: value})
+        if date not in processed_data:
+            processed_data[date] = {}
+        
+        processed_data[date][datatype] = value
     
-    return processed_data
+    # Convert to list and calculate average temperature
+    result = []
+    for date, values in processed_data.items():
+        temp = None
+        if 'TAVG' in values:
+            temp = values['TAVG']
+        elif 'TMAX' in values and 'TMIN' in values:
+            temp = (values['TMAX'] + values['TMIN']) / 2
+        
+        if temp is not None:
+            result.append({
+                'date': date,
+                'temperature': temp
+            })
+    
+    # Sort by date
+    result.sort(key=lambda x: datetime.strptime(x['date'], '%Y-%m-%d'))
+    
+    logger.info(f"Processed {len(result)} records with temperature data")
+    return result
 
 def get_weather_data(station_id, start_date, end_date):
-    return fetch_weather_data(station_id, start_date, end_date)
+    try:
+        return fetch_weather_data(station_id, start_date, end_date)
+    except Exception as e:
+        logger.error(f"Error in get_weather_data: {str(e)}")
+        raise
