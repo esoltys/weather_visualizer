@@ -40,18 +40,30 @@ def fetch_weather_data(station_id, start_date, end_date):
     today = datetime.now()
 
     # Check if dates are in the future
-    if start > today or end > today:
-        raise ValueError("Cannot query future dates. Please select a date range in the past.")
+    if start > today:
+        raise ValueError("Start date cannot be in the future.")
+    if end > today:
+        end = today
+        logger.info(f"End date adjusted to today: {end.strftime('%Y-%m-%d')}")
 
     # Fetch station metadata to check date range
     station_metadata = fetch_station_metadata(station_id)
     station_start = datetime.strptime(station_metadata['mindate'], '%Y-%m-%d')
     station_end = datetime.strptime(station_metadata['maxdate'], '%Y-%m-%d')
 
-    # Check if requested dates are within station's data range
-    if start < station_start or end > station_end:
-        raise ValueError(f"Requested date range ({start_date} to {end_date}) is outside the station's data range ({station_metadata['mindate']} to {station_metadata['maxdate']}).")
-    
+    # Adjust date range to station's available data
+    if start < station_start:
+        start = station_start
+        logger.info(f"Start date adjusted to station's earliest date: {start.strftime('%Y-%m-%d')}")
+    if end > station_end:
+        end = station_end
+        logger.info(f"End date adjusted to station's latest date: {end.strftime('%Y-%m-%d')}")
+
+    # Ensure the date range is not more than 1 year
+    if (end - start).days > 365:
+        end = start + timedelta(days=365)
+        logger.info(f"Date range adjusted to 1 year: {start.strftime('%Y-%m-%d')} to {end.strftime('%Y-%m-%d')}")
+
     params = {
         "datasetid": "GHCND",
         "stationid": station_id,

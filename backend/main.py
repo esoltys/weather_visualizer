@@ -30,9 +30,15 @@ async def get_stations():
 async def get_weather(station_id: str, start_date: str, end_date: str):
     try:
         logger.info(f"Fetching weather data for station {station_id} from {start_date} to {end_date}")
-        data = get_weather_data(station_id, start_date, end_date)
+        data, adjusted_range = get_weather_data(station_id, start_date, end_date)
         logger.info(f"Fetched {len(data)} weather records")
-        return {"results": data}
+        return {
+            "results": data,
+            "adjusted_range": adjusted_range
+        }
+    except ValueError as e:
+        logger.error(f"Value error: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Error fetching weather data: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
