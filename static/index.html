@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Visualizer</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div id="app">
+        <h1>Historical Weather Patterns Visualizer</h1>
+        <div id="mapView"></div>
+        <div id="controls">
+            <input type="date" id="startDate">
+            <input type="date" id="endDate">
+            <button id="fetchData">Fetch Weather Data</button>
+        </div>
+        <canvas id="weatherChart"></canvas>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Load ArcGIS API for JavaScript
+        const script = document.createElement('script');
+        script.src = 'https://js.arcgis.com/4.24/';
+        script.onload = function() {
+            // Once ArcGIS API is loaded, load our app.js
+            const appScript = document.createElement('script');
+            appScript.src = '/static/app.js';
+            document.body.appendChild(appScript);
+        };
+        document.body.appendChild(script);
+    </script>
+</body>
+</html>
