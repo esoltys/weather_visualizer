@@ -22,3 +22,7 @@ body {
 #weatherChart {
     max-height: 400px;
 }
+
+.esri-popup__header-title {
+    word-wrap: break-word;
+}

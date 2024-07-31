@@ -3,8 +3,9 @@ require([
     "esri/views/MapView",
     "esri/widgets/Search",
     "esri/Graphic",
-    "esri/layers/GraphicsLayer"
-], function(Map, MapView, Search, Graphic, GraphicsLayer) {
+    "esri/layers/GraphicsLayer",
+    "esri/widgets/Popup"
+], function(Map, MapView, Search, Graphic, GraphicsLayer, Popup) {
     const map = new Map({
         basemap: "topo-vector"
     });
@@ -26,6 +27,7 @@ require([
     map.add(stationsLayer);
 
     let selectedStation = null;
+    let selectedGraphic = null;
 
     function addStationsToMap(stations) {
         stations.forEach(station => {
@@ -47,7 +49,11 @@ require([
             const pointGraphic = new Graphic({
                 geometry: point,
                 symbol: markerSymbol,
-                attributes: station
+                attributes: station,
+                popupTemplate: {
+                    title: station.name,
+                    content: `ID: ${station.id}<br>Elevation: ${station.elevation} m`
+                }
             });
 
             stationsLayer.add(pointGraphic);
@@ -65,17 +71,41 @@ require([
         view.hitTest(event).then(function(response) {
             const result = response.results[0];
             if (result && result.graphic) {
-                selectedStation = result.graphic.attributes.id;
-                console.log("Selected station:", selectedStation);
-            }
-        });
-    });
+                // Reset previously selected graphic
+                if (selectedGraphic) {
+                    selectedGraphic.symbol = {
+                        type: "simple-marker",
+                        color: [226, 119, 40],
+                        outline: {
+                            color: [255, 255, 255],
+                            width: 1
+                        }
+                    };
+                }
 
-    view.on("click", function(event) {
-        view.hitTest(event).then(function(response) {
-            const result = response.results[0];
-            if (result && result.graphic) {
-                selectedStation = result.graphic.attributes.stationid;
+                selectedStation = result.graphic.attributes.id;
+                selectedGraphic = result.graphic;
+
+                // Highlight the selected station
+                selectedGraphic.symbol = {
+                    type: "simple-marker",
+                    color: [0, 255, 0],
+                    outline: {
+                        color: [255, 255, 255],
+                        width: 2
+                    },
+                    size: 12
+                };
+
+                const stationName = result.graphic.attributes.name;
+                document.getElementById("stationInfo").innerHTML = `Selected station: ${stationName}`;
+                console.log("Selected station:", selectedStation);
+
+                // Show popup for the selected station
+                view.popup.open({
+                    features: [result.graphic],
+                    location: result.mapPoint
+                });
             }
         });
     });
