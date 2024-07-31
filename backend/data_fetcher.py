@@ -29,7 +29,13 @@ def fetch_weather_stations(limit=1000, offset=1):
     logger.info(f"NOAA API response content for stations: {response.text[:500]}...")  # Log first 500 characters
     
     response.raise_for_status()
-    return response.json()
+    data = response.json()
+    
+    # Add a formatted date range string to each station
+    for station in data.get('results', []):
+        station['dateRange'] = f"{station['mindate']} to {station['maxdate']}"
+    
+    return data
 
 def fetch_weather_data(station_id, start_date, end_date):
     headers = {"token": NOAA_API_TOKEN}

@@ -4,8 +4,8 @@ require([
     "esri/widgets/Search",
     "esri/Graphic",
     "esri/layers/GraphicsLayer",
-    "esri/widgets/Popup"
-], function(Map, MapView, Search, Graphic, GraphicsLayer, Popup) {
+    "esri/PopupTemplate"
+], function(Map, MapView, Search, Graphic, GraphicsLayer, PopupTemplate) {
     const map = new Map({
         basemap: "topo-vector"
     });
@@ -27,7 +27,6 @@ require([
     map.add(stationsLayer);
 
     let selectedStation = null;
-    let selectedGraphic = null;
 
     function addStationsToMap(stations) {
         stations.forEach(station => {
@@ -46,14 +45,34 @@ require([
                 }
             };
 
+            const popupTemplate = new PopupTemplate({
+                title: station.name,
+                content: [
+                    {
+                        type: "fields",
+                        fieldInfos: [
+                            {
+                                fieldName: "id",
+                                label: "Station ID"
+                            },
+                            {
+                                fieldName: "elevation",
+                                label: "Elevation (meters)"
+                            },
+                            {
+                                fieldName: "dateRange",
+                                label: "Available Date Range"
+                            }
+                        ]
+                    }
+                ]
+            });
+
             const pointGraphic = new Graphic({
                 geometry: point,
                 symbol: markerSymbol,
                 attributes: station,
-                popupTemplate: {
-                    title: station.name,
-                    content: `ID: ${station.id}<br>Elevation: ${station.elevation} m`
-                }
+                popupTemplate: popupTemplate
             });
 
             stationsLayer.add(pointGraphic);
@@ -71,41 +90,9 @@ require([
         view.hitTest(event).then(function(response) {
             const result = response.results[0];
             if (result && result.graphic) {
-                // Reset previously selected graphic
-                if (selectedGraphic) {
-                    selectedGraphic.symbol = {
-                        type: "simple-marker",
-                        color: [226, 119, 40],
-                        outline: {
-                            color: [255, 255, 255],
-                            width: 1
-                        }
-                    };
-                }
-
                 selectedStation = result.graphic.attributes.id;
-                selectedGraphic = result.graphic;
-
-                // Highlight the selected station
-                selectedGraphic.symbol = {
-                    type: "simple-marker",
-                    color: [0, 255, 0],
-                    outline: {
-                        color: [255, 255, 255],
-                        width: 2
-                    },
-                    size: 12
-                };
-
-                const stationName = result.graphic.attributes.name;
-                document.getElementById("stationInfo").innerHTML = `Selected station: ${stationName}`;
+                document.getElementById("stationInfo").innerHTML = `Selected station: ${result.graphic.attributes.name}`;
                 console.log("Selected station:", selectedStation);
-
-                // Show popup for the selected station
-                view.popup.open({
-                    features: [result.graphic],
-                    location: result.mapPoint
-                });
             }
         });
     });
@@ -152,35 +139,59 @@ require([
                 }
 
                 // Process and visualize the data using Chart.js
-                const dates = data.results.map(d => d.date.split('T')[0]);  // Extract date part
-                const temps = data.results.map(d => d.value);
+                const validData = data.results.filter(d => d.value !== null && d.value !== 0 && !isNaN(d.value));
+                const chartData = validData.map(d => ({
+                    x: luxon.DateTime.fromISO(d.date.split('T')[0]),
+                    y: d.value
+                }));
 
                 const ctx = document.getElementById("weatherChart").getContext('2d');
                 chart = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: dates,
                         datasets: [{
                             label: 'Temperature',
-                            data: temps,
+                            data: chartData,
                             borderColor: 'rgb(75, 192, 192)',
-                            tension: 0.1
+                            tension: 0.1,
+                            pointRadius: 0,
+                            borderWidth: 1.5
                         }]
                     },
                     options: {
                         responsive: true,
                         scales: {
+                            x: {
+                                type: 'time',
+                                time: {
+                                    unit: 'month'
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Date'
+                                }
+                            },
                             y: {
-                                beginAtZero: false,
                                 title: {
                                     display: true,
                                     text: 'Temperature (°C)'
                                 }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
                             },
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: 'Date'
+                            zoom: {
+                                zoom: {
+                                    wheel: {
+                                        enabled: true,
+                                    },
+                                    pinch: {
+                                        enabled: true
+                                    },
+                                    mode: 'xy',
                                 }
                             }
                         }
