@@ -24,7 +24,10 @@
                 <button id="fetchData" class="button is-primary">Fetch Weather Data</button>
             </div>
         </div>
-        <canvas id="weatherChart"></canvas>
+        <div id="chartContainer">
+            <canvas id="weatherChart"></canvas>
+            <div id="loadingIndicator" style="display: none;">Loading data...</div>
+        </div>        
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/luxon@2.3.1/build/global/luxon.min.js"></script>

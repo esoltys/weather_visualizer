@@ -104,17 +104,17 @@ require([
             alert("Please select a weather station on the map first.");
             return;
         }
-
+    
         const startDate = document.getElementById("startDate").value;
         const endDate = document.getElementById("endDate").value;
-
+    
         // Clear previous chart and show loading message
         if (chart) {
             chart.destroy();
             chart = null;
         }
-        document.getElementById("weatherChart").innerHTML = "Loading data...";
-
+        document.getElementById("loadingIndicator").style.display = "block";
+    
         fetch(`/api/weather/${selectedStation}?start_date=${startDate}&end_date=${endDate}`)
             .then(response => {
                 if (!response.ok) {
@@ -125,6 +125,9 @@ require([
                 return response.json();
             })
             .then(data => {
+                // Hide loading indicator
+                document.getElementById("loadingIndicator").style.display = "none";
+                
                 console.log("Received data:", data);  // Log the received data
                 if (!Array.isArray(data.results) || data.results.length === 0) {
                     throw new Error('No data available for the selected station and date range');
@@ -200,6 +203,7 @@ require([
             })
             .catch(error => {
                 console.error('Error:', error);
+                document.getElementById("loadingIndicator").style.display = "none";
                 document.getElementById("weatherChart").innerHTML = `Error: ${error.message}`;
                 alert(`Error: ${error.message}`);
             });
