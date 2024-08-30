@@ -65,6 +65,37 @@ Before you begin, ensure you have met the following requirements:
    - Choose a start and end date
    - Click "Fetch Weather Data" to view the temperature trend
 
+## Architecture
+
+```mermaid
+graph TB
+    User((User))
+
+    subgraph "Weather Visualizer Application"
+        FrontendApp["Frontend Application<br/>(JavaScript)"]
+        BackendServer["Backend Server<br/>(FastAPI)"]
+        StaticFileServer["Static File Server<br/>(FastAPI StaticFiles)"]
+    end
+
+    subgraph "External Services"
+        NOAAAPI["NOAA Climate Data Online API<br/>(External)"]
+    end
+
+    User --> FrontendApp
+    FrontendApp --> BackendServer
+    FrontendApp --> StaticFileServer
+    BackendServer --> NOAAAPI
+
+    classDef frontend fill:#1168bd,stroke:#0b4884,color:#ffffff
+    classDef backend fill:#2694ab,stroke:#1a6d7d,color:#ffffff
+    classDef external fill:#999999,stroke:#666666,color:#ffffff
+
+    class FrontendApp frontend
+    class BackendServer,StaticFileServer backend
+    class NOAAAPI external
+
+```
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
